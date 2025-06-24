@@ -1,16 +1,34 @@
-let quotes = [];
+   // Array to store quote objects (master list)
+        let quotes = [];
         // Variable to store the currently active filter category
         let currentFilterCategory = 'all';
 
+        // --- Simulated Server Data ---
+        // This array simulates the data stored on a remote server.
+        // It's a deep copy to ensure local changes don't directly modify the "server" data until pushed.
+        let serverQuotes = [
+            { id: 's1', text: "The only way to do great work is to love what you do.", category: "Inspiration" },
+            { id: 's2', text: "Strive not to be a success, but rather to be of value.", category: "Motivation" },
+            { id: 's3', text: "The mind is everything. What you think you become.", category: "Philosophy" },
+            { id: 's4', text: "Innovation distinguishes between a leader and a follower.", category: "Business" },
+            { id: 's5', text: "The future belongs to those who believe in the beauty of their dreams.", category: "Dreams" },
+            { id: 's6', text: "The server added this quote.", category: "Server New" } // New quote on server
+        ].map(q => ({...q})); // Deep copy
+
+        // Simple ID counter for new quotes added locally or on server
+        let quoteIdCounter = 0;
+
+
         // Get DOM elements that exist initially
-        const quoteDisplay = document.getElementById('quoteDisplay'); // Added: Reference to the quote-display div
+        const quoteDisplay = document.getElementById('quoteDisplay');
         const quoteTextElement = document.getElementById('quoteText');
         const quoteCategoryElement = document.getElementById('quoteCategory');
         const newQuoteButton = document.getElementById('newQuote');
         const exportQuotesButton = document.getElementById('exportQuotesButton');
         const messageDisplay = document.getElementById('messageDisplay');
         const formContainer = document.getElementById('formContainer');
-        const categoryFilter = document.getElementById('categoryFilter'); // New: Category Filter dropdown
+        const categoryFilter = document.getElementById('categoryFilter');
+        const syncButton = document.getElementById('syncButton'); // New: Sync with Server button
 
         // Variables for dynamically created elements (will be assigned in createAddQuoteForm)
         let newQuoteText;
@@ -19,6 +37,15 @@ let quotes = [];
 
 
         // --- Helper Functions ---
+
+        /**
+         * @function generateUniqueId
+         * @description Generates a simple unique ID for quotes.
+         * @returns {string} A unique ID.
+         */
+        function generateUniqueId() {
+            return `q_${Date.now()}_${quoteIdCounter++}`;
+        }
 
         /**
          * @function saveQuotes
@@ -37,23 +64,30 @@ let quotes = [];
         /**
          * @function loadQuotes
          * @description Loads quotes from local storage when the application initializes.
+         * Assigns IDs to existing quotes if they don't have one.
          */
         function loadQuotes() {
             try {
                 const storedQuotes = localStorage.getItem('quotes');
                 if (storedQuotes) {
                     quotes = JSON.parse(storedQuotes);
+                    // Ensure all loaded quotes have an 'id' for syncing
+                    quotes.forEach(quote => {
+                        if (!quote.id) {
+                            quote.id = generateUniqueId();
+                        }
+                    });
                     console.log('Quotes loaded from local storage.');
                 } else {
                     console.log('No quotes found in local storage. Using default.');
-                    // If no quotes in local storage, use a default set
+                    // If no quotes in local storage, use a default set and assign IDs
                     quotes = [
                         { text: "The only way to do great work is to love what you do.", category: "Inspiration" },
                         { text: "Strive not to be a success, but rather to be of value.", category: "Motivation" },
                         { text: "The mind is everything. What you think you become.", category: "Philosophy" },
                         { text: "Innovation distinguishes between a leader and a follower.", category: "Business" },
                         { text: "The future belongs to those who believe in the beauty of their dreams.", category: "Dreams" }
-                    ];
+                    ].map(q => ({...q, id: generateUniqueId()})); // Add IDs to defaults
                     saveQuotes(); // Save these default quotes
                 }
             } catch (e) {
@@ -146,7 +180,7 @@ let quotes = [];
             const category = newQuoteCategory.value.trim();
 
             if (text && category) {
-                const newQuote = { text, category };
+                const newQuote = { id: generateUniqueId(), text, category }; // Assign ID to new quote
                 quotes.push(newQuote);
                 saveQuotes(); // Save to local storage after adding
                 populateCategories(); // Update categories dropdown if new category
@@ -257,7 +291,7 @@ let quotes = [];
             const fileReader = new FileReader();
             fileReader.onload = function(e) {
                 try {
-                    const importedQuotes = JSON.parse(e.target.result);
+                    let importedQuotes = JSON.parse(e.target.result);
 
                     // Basic validation for imported data structure
                     if (!Array.isArray(importedQuotes) || !importedQuotes.every(q => q.text && q.category)) {
@@ -265,7 +299,20 @@ let quotes = [];
                         return;
                     }
 
-                    quotes.push(...importedQuotes);
+                    // Assign IDs to imported quotes if they don't have one
+                    importedQuotes.forEach(q => {
+                        if (!q.id) {
+                            q.id = generateUniqueId();
+                        }
+                    });
+
+                    // Merge imported quotes with existing local quotes
+                    const merged = new Map();
+                    quotes.forEach(q => merged.set(q.id, q)); // Add existing local quotes
+                    importedQuotes.forEach(q => merged.set(q.id, q)); // Overwrite with imported if IDs match, add new
+
+                    quotes = Array.from(merged.values()); // Convert map back to array
+
                     saveQuotes(); // Save to local storage after importing
                     populateCategories(); // Update categories dropdown
                     displayMessage('Quotes imported successfully! 🎉', 'success');
@@ -321,8 +368,8 @@ let quotes = [];
          * Used to prevent double-saving when called from addQuote.
          */
         function filterQuotes(save = true) {
-            const selectedCategory = categoryFilter.value; // Added: local variable to get the current selected category
-            currentFilterCategory = selectedCategory; // Update the global active filter based on the selection
+            const selectedCategory = categoryFilter.value;
+            currentFilterCategory = selectedCategory;
             if (save) {
                 saveFilterPreference();
             }
@@ -360,6 +407,109 @@ let quotes = [];
             }
         }
 
+        // --- Server Simulation Functions ---
+
+        /**
+         * @function simulateFetchFromServer
+         * @description Simulates fetching quotes from a server after a delay.
+         * @returns {Promise<Array<Object>>} A promise that resolves with the server quotes.
+         */
+        async function simulateFetchFromServer() {
+            return new Promise(resolve => {
+                setTimeout(() => {
+                    // Return a deep copy of serverQuotes to simulate a new fetch
+                    resolve(serverQuotes.map(q => ({...q})));
+                }, 1000); // Simulate network delay
+            });
+        }
+
+        /**
+         * @function simulatePushToServer
+         * @description Simulates pushing local changes to the server.
+         * In a real app, this would involve sending only changed/new items.
+         * For this simulation, we assume a full overwrite for simplicity.
+         * @param {Array<Object>} dataToPush - The array of quotes to "push" to the server.
+         * @returns {Promise<void>} A promise that resolves when the push is "complete".
+         */
+        async function simulatePushToServer(dataToPush) {
+            return new Promise(resolve => {
+                setTimeout(() => {
+                    // In a real scenario, the server would merge intelligently.
+                    // Here, we simply replace the server's data with the client's current data.
+                    // This creates a simple "last write wins" on the server side for pushed items.
+                    serverQuotes = dataToPush.map(q => ({...q})); // Deep copy
+                    console.log('Simulated push to server successful.');
+                    resolve();
+                }, 800); // Simulate network delay
+            });
+        }
+
+        /**
+         * @function syncWithServer
+         * @description Syncs local quotes with simulated server data, resolving conflicts with server precedence.
+         */
+        async function syncWithServer() {
+            displayMessage("Syncing with server...", "info");
+            try {
+                const serverData = await simulateFetchFromServer();
+                console.log('Server data fetched:', serverData);
+
+                let mergedQuotesMap = new Map();
+                let quotesAddedFromServer = 0;
+                let quotesUpdatedFromServer = 0;
+                let quotesPushedToServer = 0; // Local-only quotes that were effectively "pushed"
+
+                // Pass 1: Add server data to map. Server wins existing IDs.
+                serverData.forEach(sQuote => {
+                    mergedQuotesMap.set(sQuote.id, {...sQuote}); // Deep copy
+                });
+
+                // Pass 2: Merge local data.
+                // If a local quote's ID exists on the server, the server version already won in Pass 1.
+                // If a local quote's ID does NOT exist on the server, it's a local-only quote, add it to mergedMap.
+                // These local-only quotes are effectively "pushed" to the server (next step).
+                quotes.forEach(lQuote => {
+                    if (!mergedQuotesMap.has(lQuote.id)) {
+                        mergedQuotesMap.set(lQuote.id, {...lQuote}); // Add local-only quote
+                        quotesPushedToServer++;
+                    }
+                });
+
+                // Convert map back to array
+                const newQuotesArray = Array.from(mergedQuotesMap.values());
+
+                // Determine counts for display message
+                quotesAddedFromServer = newQuotesArray.filter(nq => !quotes.some(oq => oq.id === nq.id)).length;
+                quotesUpdatedFromServer = newQuotesArray.filter(nq => quotes.some(oq => oq.id === nq.id && (oq.text !== nq.text || oq.category !== nq.category))).length;
+
+
+                quotes = newQuotesArray; // Update local quotes with merged data
+                saveQuotes(); // Save the new merged data to local storage
+
+                // Simulate pushing new local items to server after client pull
+                // In a real system, you'd track changes. Here we just push the whole new local state.
+                await simulatePushToServer(quotes);
+
+                populateCategories(); // Refresh categories based on new quotes
+                filterQuotes(); // Re-apply filter and show new random quote
+
+                let message = `Sync complete! `;
+                if (quotesAddedFromServer > 0) message += `${quotesAddedFromServer} new quotes added from server. `;
+                if (quotesUpdatedFromServer > 0) message += `${quotesUpdatedFromServer} quotes updated from server. `;
+                if (quotesPushedToServer > 0) message += `${quotesPushedToServer} local quotes uploaded to server. `;
+                if (quotesAddedFromServer === 0 && quotesUpdatedFromServer === 0 && quotesPushedToServer === 0) {
+                    message += `No changes detected.`;
+                }
+                displayMessage(message, "success");
+                console.log('Local quotes after sync:', quotes);
+
+            } catch (error) {
+                console.error('Sync failed:', error);
+                displayMessage('Sync failed. Please try again.', 'error');
+            }
+        }
+
+
         // --- Event Listeners and Initial Load ---
 
         // Event listener for the "Show New Quote" button
@@ -367,6 +517,9 @@ let quotes = [];
 
         // Event listener for the "Export Quotes" button
         exportQuotesButton.addEventListener('click', exportQuotes);
+
+        // Event listener for the "Sync with Server" button
+        syncButton.addEventListener('click', syncWithServer);
 
         // Initial setup when the page loads
         window.onload = () => {
@@ -399,4 +552,6 @@ let quotes = [];
                 sessionStorage.removeItem('lastViewedQuote'); // Clear potentially bad data
                 showRandomQuote(); // Show a random one if session data is bad
                 }
-            };
+            // Optional: Start periodic sync after initial load (e.g., every 30 seconds)
+            // setInterval(syncWithServer, 30000);
+        };
