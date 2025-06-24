@@ -7,14 +7,20 @@ let quotes = [
   { text: "The future belongs to those who believe in the beauty of their dreams.", category: "Dreams" }
 ];
 
-// Get DOM elements
+// Get DOM elements that exist initially
 const quoteTextElement = document.getElementById('quoteText');
 const quoteCategoryElement = document.getElementById('quoteCategory');
 const newQuoteButton = document.getElementById('newQuote');
-const addQuoteButton = document.getElementById('addQuoteButton'); // Assuming a button to trigger addQuote
-const newQuoteText = document.getElementById('newQuoteText');
-const newQuoteCategory = document.getElementById('newQuoteCategory');
 const messageDisplay = document.getElementById('messageDisplay'); // An element to display user messages
+const formContainer = document.getElementById('formContainer'); // A new container for our dynamically created form
+
+// Variables for dynamically created elements (will be assigned in createAddQuoteForm)
+let newQuoteText;
+let newQuoteCategory;
+let addQuoteButton;
+
+
+// --- Helper Functions ---
 
 /**
  * @function showRandomQuote
@@ -24,18 +30,13 @@ const messageDisplay = document.getElementById('messageDisplay'); // An element 
  */
 function showRandomQuote() {
   if (quotes.length === 0) {
-    // Still safer to use textContent here for plain error messages
     quoteTextElement.textContent = "No quotes available. Add some!";
     quoteCategoryElement.textContent = "";
     return;
   }
-  // Generate a random index
   const randomIndex = Math.floor(Math.random() * quotes.length);
-  // Get the random quote object
   const randomQuote = quotes[randomIndex];
 
-  // Update the DOM elements with the quote text and category using innerHTML
-  // We're wrapping the text in <strong> and <em> tags directly.
   quoteTextElement.innerHTML = `<strong>"${randomQuote.text}"</strong>`;
   quoteCategoryElement.innerHTML = `<em>- ${randomQuote.category}</em>`;
 }
@@ -49,23 +50,19 @@ function showRandomQuote() {
  */
 function displayMessage(message, type = 'info') {
   if (messageDisplay) {
-    // For simplicity, let's assume messages here might contain simple HTML like <strong> or <br>
-    // However, for user-provided input, always sanitize before using innerHTML.
     messageDisplay.innerHTML = message;
-    // Clear any previous styling classes
-    messageDisplay.className = '';
-    // Add new styling based on message type (you'd define these in CSS)
+    messageDisplay.className = ''; // Clear any previous styling classes
     messageDisplay.classList.add(`message-${type}`);
-    messageDisplay.classList.add('fade-in'); // Example for a fade-in animation
+    messageDisplay.classList.add('fade-in');
 
     setTimeout(() => {
       messageDisplay.classList.remove('fade-in');
-      messageDisplay.classList.add('fade-out'); // Example for a fade-out animation
+      messageDisplay.classList.add('fade-out');
       setTimeout(() => {
-        messageDisplay.innerHTML = ''; // Clear content using innerHTML
-        messageDisplay.className = ''; // Reset all classes
-      }, 500); // Allow fade-out animation to complete
-    }, 3000); // Message visible for 3 seconds
+        messageDisplay.innerHTML = '';
+        messageDisplay.className = '';
+      }, 500);
+    }, 3000);
   }
 }
 
@@ -75,39 +72,80 @@ function displayMessage(message, type = 'info') {
  * It also clears the input fields and displays a new random quote.
  */
 function addQuote() {
-  // Get values from input fields, trim whitespace
+  // Ensure the dynamically created elements are accessible
+  if (!newQuoteText || !newQuoteCategory) {
+    displayMessage("Form elements not found. Please reload or check setup.", "error");
+    return;
+  }
+
   const text = newQuoteText.value.trim();
   const category = newQuoteCategory.value.trim();
 
-  // Validate input: ensure both fields are not empty
   if (text && category) {
-    // Create a new quote object
     const newQuote = { text, category };
-    // Add the new quote to the quotes array
     quotes.push(newQuote);
 
-    // Clear the input fields
     newQuoteText.value = '';
     newQuoteCategory.value = '';
 
-    // Display success message - here, we pass plain text, displayMessage will handle innerHTML
     displayMessage("Quote added successfully! 🎉", "success");
-
-    // Display a new random quote, potentially including the newly added one
     showRandomQuote();
   } else {
-    // Provide user feedback if input is invalid - using simple HTML for the message
     displayMessage("<strong>Error:</strong> Please enter both quote text and category.", "error");
   }
 }
 
-// Event listener for the "Show New Quote" button
-newQuoteButton.addEventListener('click', showRandomQuote);
+---
 
-// Event listener for the "Add Quote" button (assuming you have one)
-if (addQuoteButton) {
+## Dynamically Creating the Add Quote Form
+
+```javascript
+/**
+ * @function createAddQuoteForm
+ * @description Dynamically creates the input fields and button for adding a new quote
+ * and appends them to a designated container in the DOM.
+ */
+function createAddQuoteForm() {
+  if (!formContainer) {
+    console.error("Error: '#formContainer' element not found in the HTML. Cannot create form.");
+    return;
+  }
+
+  // Create a container for the form elements for better organization
+  const formDiv = document.createElement('div');
+  formDiv.id = 'addQuoteForm';
+  formDiv.className = 'quote-form'; // Add a class for potential styling
+
+  // Create Quote Text Input
+  newQuoteText = document.createElement('input'); // Assign to the global variable
+  newQuoteText.type = 'text';
+  newQuoteText.id = 'newQuoteText';
+  newQuoteText.placeholder = 'Enter new quote text';
+  newQuoteText.className = 'form-input'; // Add a class for styling
+
+  // Create Quote Category Input
+  newQuoteCategory = document.createElement('input'); // Assign to the global variable
+  newQuoteCategory.type = 'text';
+  newQuoteCategory.id = 'newQuoteCategory';
+  newQuoteCategory.placeholder = 'Enter quote category';
+  newQuoteCategory.className = 'form-input'; // Add a class for styling
+
+  // Create Add Quote Button
+  addQuoteButton = document.createElement('button'); // Assign to the global variable
+  addQuoteButton.id = 'addQuoteButton';
+  addQuoteButton.textContent = 'Add New Quote';
+  addQuoteButton.className = 'button primary-button'; // Add classes for styling
+
+  // Append elements to the form container div
+  formDiv.appendChild(newQuoteText);
+  formDiv.appendChild(newQuoteCategory);
+  formDiv.appendChild(addQuoteButton);
+
+  // Append the form container div to the main form container in HTML
+  formContainer.appendChild(formDiv);
+
+  // Attach event listener to the dynamically created button
   addQuoteButton.addEventListener('click', addQuote);
-}
 
-// Initial call to display a quote when the page loads
-window.onload = showRandomQuote;
+  console.log("Add Quote Form created and appended.");
+}
