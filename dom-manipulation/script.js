@@ -1,9 +1,10 @@
-// Array to store quote objects (master list)
+ // Array to store quote objects (master list)
         let quotes = [];
         // Variable to store the currently active filter category
         let currentFilterCategory = 'all';
 
         // Get DOM elements that exist initially
+        const quoteDisplay = document.getElementById('quoteDisplay'); // Added: Reference to the quote-display div
         const quoteTextElement = document.getElementById('quoteText');
         const quoteCategoryElement = document.getElementById('quoteCategory');
         const newQuoteButton = document.getElementById('newQuote');
@@ -397,5 +398,5 @@
                 console.error('Error retrieving last viewed quote from session storage:', e);
                 sessionStorage.removeItem('lastViewedQuote'); // Clear potentially bad data
                 showRandomQuote(); // Show a random one if session data is bad
-            }
-        };
+                }
+            };
