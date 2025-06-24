@@ -1,22 +1,10 @@
- // Array to store quote objects (master list)
+// Array to store quote objects (master list)
         let quotes = [];
         // Variable to store the currently active filter category
         let currentFilterCategory = 'all';
 
-        // --- Simulated Server Data ---
-        // This array simulates the data stored on a remote server.
-        // It's a deep copy to ensure local changes don't directly modify the "server" data until pushed.
-        let serverQuotes = [
-            { id: 's1', text: "The only way to do great work is to love what you do.", category: "Inspiration" },
-            { id: 's2', text: "Strive not to be a success, but rather to be of value.", category: "Motivation" },
-            { id: 's3', text: "The mind is everything. What you think you become.", category: "Philosophy" },
-            { id: 's4', text: "Innovation distinguishes between a leader and a follower.", category: "Business" },
-            { id: 's5', text: "The future belongs to those who believe in the beauty of their dreams.", category: "Dreams" },
-            { id: 's6', text: "The server added this quote.", category: "Server New" } // New quote on server
-        ].map(q => ({...q})); // Deep copy
-
-        // Simple ID counter for new quotes added locally or on server
-        let quoteIdCounter = 0;
+        // Simple ID counter for new quotes added locally
+        let localQuoteIdCounter = 0;
 
 
         // Get DOM elements that exist initially
@@ -28,7 +16,7 @@
         const messageDisplay = document.getElementById('messageDisplay');
         const formContainer = document.getElementById('formContainer');
         const categoryFilter = document.getElementById('categoryFilter');
-        const syncButton = document.getElementById('syncButton'); // New: Sync with Server button
+        const syncButton = document.getElementById('syncButton');
 
         // Variables for dynamically created elements (will be assigned in createAddQuoteForm)
         let newQuoteText;
@@ -39,12 +27,13 @@
         // --- Helper Functions ---
 
         /**
-         * @function generateUniqueId
-         * @description Generates a simple unique ID for quotes.
-         * @returns {string} A unique ID.
+         * @function generateLocalUniqueId
+         * @description Generates a simple unique ID for locally created quotes.
+         * Ensures IDs don't clash with potential server IDs (e.g., from JSONPlaceholder).
+         * @returns {string} A unique ID prefixed for local origin.
          */
-        function generateUniqueId() {
-            return `q_${Date.now()}_${quoteIdCounter++}`;
+        function generateLocalUniqueId() {
+            return `local_${Date.now()}_${localQuoteIdCounter++}`;
         }
 
         /**
@@ -64,30 +53,30 @@
         /**
          * @function loadQuotes
          * @description Loads quotes from local storage when the application initializes.
-         * Assigns IDs to existing quotes if they don't have one.
+         * Assigns local IDs to existing quotes if they don't have one, ensuring they're distinguishable.
          */
         function loadQuotes() {
             try {
                 const storedQuotes = localStorage.getItem('quotes');
                 if (storedQuotes) {
                     quotes = JSON.parse(storedQuotes);
-                    // Ensure all loaded quotes have an 'id' for syncing
+                    // Ensure all loaded quotes have an 'id' for syncing, or assign a local one
                     quotes.forEach(quote => {
                         if (!quote.id) {
-                            quote.id = generateUniqueId();
+                            quote.id = generateLocalUniqueId();
                         }
                     });
                     console.log('Quotes loaded from local storage.');
                 } else {
                     console.log('No quotes found in local storage. Using default.');
-                    // If no quotes in local storage, use a default set and assign IDs
+                    // If no quotes in local storage, use a default set and assign local IDs
                     quotes = [
                         { text: "The only way to do great work is to love what you do.", category: "Inspiration" },
                         { text: "Strive not to be a success, but rather to be of value.", category: "Motivation" },
                         { text: "The mind is everything. What you think you become.", category: "Philosophy" },
                         { text: "Innovation distinguishes between a leader and a follower.", category: "Business" },
                         { text: "The future belongs to those who believe in the beauty of their dreams.", category: "Dreams" }
-                    ].map(q => ({...q, id: generateUniqueId()})); // Add IDs to defaults
+                    ].map(q => ({...q, id: generateLocalUniqueId()})); // Add local IDs to defaults
                     saveQuotes(); // Save these default quotes
                 }
             } catch (e) {
@@ -180,7 +169,7 @@
             const category = newQuoteCategory.value.trim();
 
             if (text && category) {
-                const newQuote = { id: generateUniqueId(), text, category }; // Assign ID to new quote
+                const newQuote = { id: generateLocalUniqueId(), text, category }; // Assign local ID to new quote
                 quotes.push(newQuote);
                 saveQuotes(); // Save to local storage after adding
                 populateCategories(); // Update categories dropdown if new category
@@ -299,10 +288,10 @@
                         return;
                     }
 
-                    // Assign IDs to imported quotes if they don't have one
+                    // Assign local IDs to imported quotes if they don't have one, to distinguish from server IDs
                     importedQuotes.forEach(q => {
                         if (!q.id) {
-                            q.id = generateUniqueId();
+                            q.id = generateLocalUniqueId();
                         }
                     });
 
@@ -315,7 +304,7 @@
 
                     saveQuotes(); // Save to local storage after importing
                     populateCategories(); // Update categories dropdown
-                    displayMessage('Quotes imported successfully! 🎉', 'success');
+                    displayMessage('Quotes imported successfully! �', 'success');
                     filterQuotes(); // Re-apply current filter and show a new quote
                     event.target.value = ''; // Clear the file input
                 } catch (error) {
@@ -396,6 +385,7 @@
         function loadFilterPreference() {
             try {
                 const storedFilter = localStorage.getItem('lastSelectedCategory');
+                // Ensure the stored filter category is still valid (exists in current quotes)
                 if (storedFilter && ['all', ...new Set(quotes.map(q => q.category))].includes(storedFilter)) {
                     currentFilterCategory = storedFilter;
                 } else {
@@ -407,88 +397,123 @@
             }
         }
 
-        // --- Server Simulation Functions ---
+        // --- Server Interaction Functions ---
 
         /**
          * @function fetchQuotesFromServer
-         * @description Simulates fetching quotes from a server after a delay.
-         * @returns {Promise<Array<Object>>} A promise that resolves with the server quotes.
+         * @description Fetches quote-like data from JSONPlaceholder API.
+         * Maps JSONPlaceholder 'posts' to local quote format.
+         * @returns {Promise<Array<Object>>} A promise that resolves with the fetched and mapped quotes.
          */
         async function fetchQuotesFromServer() {
-            return new Promise(resolve => {
-                setTimeout(() => {
-                    // Return a deep copy of serverQuotes to simulate a new fetch
-                    resolve(serverQuotes.map(q => ({...q})));
-                }, 1000); // Simulate network delay
-            });
+            try {
+                const response = await fetch('https://jsonplaceholder.typicode.com/posts');
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                const data = await response.json();
+                // Map JSONPlaceholder posts (id, title, body) to our quote format (id, text, category)
+                // Add a 'server_' prefix to IDs to distinguish them from local ones for merging
+                const serverQuotesData = data.map(post => ({
+                    id: `server_${post.id}`, // Prefix server IDs
+                    text: post.title,
+                    category: post.body.substring(0, 20) + '...' // Use part of body as category, or 'Server'
+                }));
+                console.log('Data fetched from JSONPlaceholder:', serverQuotesData);
+                return serverQuotesData;
+            } catch (error) {
+                console.error('Failed to fetch quotes from JSONPlaceholder:', error);
+                displayMessage('Failed to fetch data from server. Check console for details.', 'error');
+                return []; // Return empty array on error
+            }
         }
 
         /**
-         * @function simulatePushToServer
-         * @description Simulates pushing local changes to the server.
-         * In a real app, this would involve sending only changed/new items.
-         * For this simulation, we assume a full overwrite for simplicity.
-         * @param {Array<Object>} dataToPush - The array of quotes to "push" to the server.
-         * @returns {Promise<void>} A promise that resolves when the push is "complete".
+         * @function pushNewLocalQuotesToServer
+         * @description Simulates pushing newly created local quotes to a server.
+         * For JSONPlaceholder, this means creating a new 'post' for each.
+         * @param {Array<Object>} newLocalQuotes - Quotes generated locally that need to be sent to the server.
+         * @returns {Promise<void>} A promise that resolves when all pushes are simulated.
          */
-        async function simulatePushToServer(dataToPush) {
-            return new Promise(resolve => {
-                setTimeout(() => {
-                    // In a real scenario, the server would merge intelligently.
-                    // Here, we simply replace the server's data with the client's current data.
-                    // This creates a simple "last write wins" on the server side for pushed items.
-                    serverQuotes = dataToPush.map(q => ({...q})); // Deep copy
-                    console.log('Simulated push to server successful.');
-                    resolve();
-                }, 800); // Simulate network delay
+        async function pushNewLocalQuotesToServer(newLocalQuotes) {
+            const pushPromises = newLocalQuotes.map(async (quote) => {
+                try {
+                    // JSONPlaceholder's /posts endpoint creates new resources.
+                    // A real backend would handle updates/sync for existing IDs.
+                    const response = await fetch('https://jsonplaceholder.typicode.com/posts', {
+                        method: 'POST',
+                        body: JSON.stringify({
+                            title: quote.text,
+                            body: quote.category,
+                            userId: 1, // Dummy userId for JSONPlaceholder
+                        }),
+                        headers: {
+                            'Content-type': 'application/json; charset=UTF-8',
+                        },
+                    });
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    const result = await response.json();
+                    console.log(`Successfully "pushed" local quote to server (new ID: ${result.id}):`, quote);
+                    // In a real app, you would update the local quote's ID with the server-assigned ID here
+                    // For this simulation, we're just acknowledging the push.
+                } catch (error) {
+                    console.error(`Failed to push local quote to server:`, quote, error);
+                    // Don't display individual push errors to avoid spamming messages, console log instead.
+                }
             });
+            await Promise.allSettled(pushPromises); // Wait for all push operations to complete
         }
 
         /**
          * @function syncWithServer
-         * @description Syncs local quotes with simulated server data, resolving conflicts with server precedence.
+         * @description Syncs local quotes with server data, resolving conflicts with server precedence.
          */
         async function syncWithServer() {
             displayMessage("Syncing with server...", "info");
             try {
-                const serverData = await fetchQuotesFromServer(); // Changed from simulateFetchFromServer
+                const serverData = await fetchQuotesFromServer();
                 console.log('Server data fetched:', serverData);
 
                 let mergedQuotesMap = new Map();
-                let quotesAddedFromServer = 0;
-                let quotesUpdatedFromServer = 0;
-                let quotesPushedToServer = 0; // Local-only quotes that were effectively "pushed"
+                let initialLocalQuotesIds = new Set(quotes.map(q => q.id)); // IDs of quotes before sync
 
                 // Pass 1: Add server data to map. Server wins existing IDs.
                 serverData.forEach(sQuote => {
-                    mergedQuotesMap.set(sQuote.id, {...sQuote}); // Deep copy
+                    mergedQuotesMap.set(sQuote.id, {...sQuote}); // Deep copy to ensure server version is pristine
                 });
 
+                let newLocalQuotesToPush = [];
                 // Pass 2: Merge local data.
-                // If a local quote's ID exists on the server, the server version already won in Pass 1.
-                // If a local quote's ID does NOT exist on the server, it's a local-only quote, add it to mergedMap.
-                // These local-only quotes are effectively "pushed" to the server (next step).
                 quotes.forEach(lQuote => {
+                    // If a local quote's ID does NOT exist on the server, it's a local-only quote, mark to push
                     if (!mergedQuotesMap.has(lQuote.id)) {
-                        mergedQuotesMap.set(lQuote.id, {...lQuote}); // Add local-only quote
-                        quotesPushedToServer++;
+                        mergedQuotesMap.set(lQuote.id, {...lQuote}); // Add local-only quote to merged data
+                        newLocalQuotesToPush.push(lQuote);
                     }
+                    // If local quote's ID exists on server, server version already took precedence.
+                    // If a quote was already on server AND local, and was edited locally,
+                    // the server's version (added in Pass 1) will override the local one.
                 });
 
-                // Convert map back to array
+                // Convert map back to array for our main 'quotes' variable
                 const newQuotesArray = Array.from(mergedQuotesMap.values());
 
-                // Determine counts for display message
-                quotesAddedFromServer = newQuotesArray.filter(nq => !quotes.some(oq => oq.id === nq.id)).length;
-                quotesUpdatedFromServer = newQuotesArray.filter(nq => quotes.some(oq => oq.id === nq.id && (oq.text !== nq.text || oq.category !== nq.category))).length;
-
+                // Calculate changes for message display
+                let quotesAddedFromServer = newQuotesArray.filter(nq => !initialLocalQuotesIds.has(nq.id)).length - newLocalQuotesToPush.length;
+                let quotesUpdatedFromServer = newQuotesArray.filter(nq =>
+                    initialLocalQuotesIds.has(nq.id) && // Was local
+                    !newLocalQuotesToPush.some(lq => lq.id === nq.id) && // Not a new local quote
+                    quotes.some(oq => oq.id === nq.id && (oq.text !== nq.text || oq.category !== nq.category)) && // Content changed
+                    serverData.some(sq => sq.id === nq.id) // And server had this ID
+                ).length;
 
                 quotes = newQuotesArray; // Update local quotes with merged data
                 saveQuotes(); // Save the new merged data to local storage
 
-                // Simulate pushing new local items to server after client pull
-                // In a real system, you'd track changes. Here we just push the whole new local state.
-                await simulatePushToServer(quotes);
+                // Simulate pushing new local items to server
+                await pushNewLocalQuotesToServer(newLocalQuotesToPush);
 
                 populateCategories(); // Refresh categories based on new quotes
                 filterQuotes(); // Re-apply filter and show new random quote
@@ -496,8 +521,8 @@
                 let message = `Sync complete! `;
                 if (quotesAddedFromServer > 0) message += `${quotesAddedFromServer} new quotes added from server. `;
                 if (quotesUpdatedFromServer > 0) message += `${quotesUpdatedFromServer} quotes updated from server. `;
-                if (quotesPushedToServer > 0) message += `${quotesPushedToServer} local quotes uploaded to server. `;
-                if (quotesAddedFromServer === 0 && quotesUpdatedFromServer === 0 && quotesPushedToServer === 0) {
+                if (newLocalQuotesToPush.length > 0) message += `${newLocalQuotesToPush.length} local quotes uploaded to server. `;
+                if (quotesAddedFromServer === 0 && quotesUpdatedFromServer === 0 && newLocalQuotesToPush.length === 0) {
                     message += `No changes detected.`;
                 }
                 displayMessage(message, "success");
