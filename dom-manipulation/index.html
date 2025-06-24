@@ -1,48 +1,152 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Dynamic Quote Generator</title>
-  <!-- Tailwind CSS CDN -->
-  <script src="https://cdn.tailwindcss.com"></script>
-  <style>
-    /* Custom styles for the quote display */
-    #quoteDisplay {
-      min-height: 80px; /* Ensure space even if no quote is displayed */
-    }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dynamic Quote Generator</title>
+    <!-- Tailwind CSS CDN for quick styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        /* Custom styles for the message display and basic layout */
+        body {
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: #f0f2f5; /* Light gray background */
+            color: #333;
+        }
+        .quote-display {
+            background-color: white;
+            padding: 2.5rem; /* Increased padding */
+            margin: 1.5rem;
+            border-radius: 1rem; /* More rounded corners */
+            box-shadow: 0 10px 25px rgba(0,0,0,0.1); /* Stronger shadow */
+            width: 90%;
+            max-width: 700px; /* Increased max-width */
+            text-align: center;
+            display: flex;
+            flex-direction: column;
+            gap: 1rem; /* Space between text and category */
+        }
+        #quoteText {
+            font-size: 1.875rem; /* text-3xl */
+            font-weight: 600; /* semi-bold */
+            color: #1a202c; /* dark gray */
+        }
+        #quoteCategory {
+            font-size: 1.125rem; /* text-lg */
+            color: #4a5568; /* medium gray */
+            font-style: italic;
+        }
+        .button {
+            padding: 0.75rem 1.5rem; /* Larger padding */
+            margin: 0.5rem;
+            border: none;
+            border-radius: 0.5rem; /* Rounded buttons */
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 500; /* Medium font weight */
+            transition: all 0.2s ease-in-out; /* Smooth transitions */
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1); /* Button shadow */
+        }
+        .button:hover {
+            transform: translateY(-2px); /* Slight lift on hover */
+            box-shadow: 0 6px 8px rgba(0,0,0,0.15);
+        }
+        .primary-button {
+            background-color: #4c51bf; /* Indigo-700 */
+            color: white;
+        }
+        .primary-button:hover {
+            background-color: #3f45a8; /* Darker indigo */
+        }
+        .secondary-button {
+            background-color: #cbd5e0; /* Gray-300 */
+            color: #2d3748; /* Gray-800 */
+        }
+        .secondary-button:hover {
+            background-color: #a0aec0; /* Darker gray */
+        }
+        .success-button {
+            background-color: #38a169; /* Green-600 */
+            color: white;
+        }
+        .success-button:hover {
+            background-color: #2f855a; /* Darker green */
+        }
+
+        /* Styles for the dynamic form */
+        #addQuoteForm {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem; /* Space between form elements */
+            margin-top: 1.5rem;
+            padding: 2.5rem;
+            border-radius: 1rem;
+            background-color: white;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.08);
+            width: 90%;
+            max-width: 700px;
+        }
+        .form-input {
+            padding: 0.75rem 1rem;
+            border: 1px solid #e2e8f0; /* Gray-200 */
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            transition: all 0.2s ease-in-out;
+        }
+        .form-input:focus {
+            outline: none;
+            border-color: #4c51bf; /* Indigo-700 */
+            box-shadow: 0 0 0 3px rgba(76,81,191,0.2); /* Focus ring */
+        }
+
+        /* Message display styles */
+        #messageDisplay {
+            margin-top: 1.5rem;
+            padding: 1rem;
+            border-radius: 0.75rem;
+            font-weight: 600;
+            min-height: 2.5rem; /* Increased height for better visibility */
+            text-align: center;
+            opacity: 0; /* Initially hidden */
+            transition: opacity 0.5s ease-in-out, background-color 0.3s ease;
+        }
+        .message-success { background-color: #d4edda; color: #155724; border: 1px solid #c3e6cb; }
+        .message-error { background-color: #f8d7da; color: #721c24; border: 1px solid #f5c6cb; }
+        .message-info { background-color: #d1ecf1; color: #0c5460; border: 1px solid #bee5eb; }
+        .fade-in { opacity: 1; }
+        .fade-out { opacity: 0; }
+    </style>
 </head>
-<body class="bg-gray-100 flex flex-col items-center justify-center min-h-screen p-4 font-sans">
-  <div class="bg-white p-8 rounded-lg shadow-xl max-w-2xl w-full text-center">
-    <h1 class="text-4xl font-bold text-gray-800 mb-6 tracking-tight">Dynamic Quote Generator</h1>
-
-    <!-- Quote Display Area -->
-    <div id="quoteDisplay" class="bg-blue-50 p-6 rounded-lg mb-8 text-lg italic text-gray-700 leading-relaxed border-l-4 border-blue-500 shadow-inner">
-      <p id="quoteText" class="mb-2"></p>
-      <p id="quoteCategory" class="text-sm text-blue-600 font-semibold"></p>
+<body>
+    <div class="quote-display">
+        <p id="quoteText"></p>
+        <p id="quoteCategory"></p>
+    </div>
+    <div class="flex flex-wrap justify-center gap-4">
+        <button id="newQuote" class="button primary-button">Show New Quote</button>
+        <button id="exportQuotesButton" class="button success-button">Export Quotes (JSON)</button>
+        <label for="importFile" class="button secondary-button cursor-pointer">Import Quotes (JSON)
+            <input type="file" id="importFile" accept=".json" class="hidden" onchange="importFromJsonFile(event)" />
+        </label>
     </div>
 
-    <!-- Show New Quote Button -->
-    <button id="newQuote" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition duration-300 ease-in-out transform hover:scale-105 shadow-md">
-      Show New Quote
-    </button>
+    <div id="messageDisplay"></div>
 
-    <hr class="my-10 border-gray-300">
-
-    <!-- Add New Quote Form -->
-    <div class="mt-8 text-left">
-      <h2 class="text-2xl font-semibold text-gray-800 mb-4">Add a New Quote</h2>
-      <div class="space-y-4">
-        <input id="newQuoteText" type="text" placeholder="Enter a new quote" class="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
-        <input id="newQuoteCategory" type="text" placeholder="Enter quote category" class="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
-        <button onclick="addQuote()" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg transition duration-300 ease-in-out transform hover:scale-105 shadow-md w-full">
-          Add Quote
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <script src="script.js"></script>
-</body>
+    <!-- This is the container where the form will be injected by JavaScript -->
+    <div id="formContainer"></div>
+<script src="dom1.js"></script>
+    <script>
+        // Initialize the quote display and form
+        document.addEventListener('DOMContentLoaded', () => {
+            displayRandomQuote();
+            injectAddQuoteForm();
+        });
+    </script>
+   </body>
 </html>
