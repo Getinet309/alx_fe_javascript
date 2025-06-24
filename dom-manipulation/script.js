@@ -1,5 +1,4 @@
- // Array to store quote objects (master list)
-        let quotes = [];
+let quotes = [];
         // Variable to store the currently active filter category
         let currentFilterCategory = 'all';
 
@@ -322,7 +321,8 @@
          * Used to prevent double-saving when called from addQuote.
          */
         function filterQuotes(save = true) {
-            currentFilterCategory = categoryFilter.value;
+            const selectedCategory = categoryFilter.value; // Added: local variable to get the current selected category
+            currentFilterCategory = selectedCategory; // Update the global active filter based on the selection
             if (save) {
                 saveFilterPreference();
             }
