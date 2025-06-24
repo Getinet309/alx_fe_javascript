@@ -1,4 +1,4 @@
-  // Array to store quote objects (master list)
+ // Array to store quote objects (master list)
         let quotes = [];
         // Variable to store the currently active filter category
         let currentFilterCategory = 'all';
@@ -410,11 +410,11 @@
         // --- Server Simulation Functions ---
 
         /**
-         * @function simulateFetchFromServer
+         * @function fetchQuotesFromServer
          * @description Simulates fetching quotes from a server after a delay.
          * @returns {Promise<Array<Object>>} A promise that resolves with the server quotes.
          */
-        async function simulateFetchFromServer() {
+        async function fetchQuotesFromServer() {
             return new Promise(resolve => {
                 setTimeout(() => {
                     // Return a deep copy of serverQuotes to simulate a new fetch
@@ -451,7 +451,7 @@
         async function syncWithServer() {
             displayMessage("Syncing with server...", "info");
             try {
-                const serverData = await simulateFetchFromServer();
+                const serverData = await fetchQuotesFromServer(); // Changed from simulateFetchFromServer
                 console.log('Server data fetched:', serverData);
 
                 let mergedQuotesMap = new Map();
