@@ -20,9 +20,11 @@ const messageDisplay = document.getElementById('messageDisplay'); // An element 
  * @function showRandomQuote
  * @description Displays a random quote from the 'quotes' array on the page.
  * If the quotes array is empty, it displays a message.
+ * Uses innerHTML to apply basic styling to the quote and category.
  */
 function showRandomQuote() {
   if (quotes.length === 0) {
+    // Still safer to use textContent here for plain error messages
     quoteTextElement.textContent = "No quotes available. Add some!";
     quoteCategoryElement.textContent = "";
     return;
@@ -32,9 +34,10 @@ function showRandomQuote() {
   // Get the random quote object
   const randomQuote = quotes[randomIndex];
 
-  // Update the DOM elements with the quote text and category
-  quoteTextElement.textContent = `"${randomQuote.text}"`;
-  quoteCategoryElement.textContent = `- ${randomQuote.category}`;
+  // Update the DOM elements with the quote text and category using innerHTML
+  // We're wrapping the text in <strong> and <em> tags directly.
+  quoteTextElement.innerHTML = `<strong>"${randomQuote.text}"</strong>`;
+  quoteCategoryElement.innerHTML = `<em>- ${randomQuote.category}</em>`;
 }
 
 /**
@@ -42,10 +45,13 @@ function showRandomQuote() {
  * @description Displays a temporary message to the user.
  * @param {string} message - The message to display.
  * @param {string} type - The type of message (e.g., 'success', 'error', 'warning').
+ * Uses innerHTML if the message contains simple HTML, otherwise textContent.
  */
 function displayMessage(message, type = 'info') {
   if (messageDisplay) {
-    messageDisplay.textContent = message;
+    // For simplicity, let's assume messages here might contain simple HTML like <strong> or <br>
+    // However, for user-provided input, always sanitize before using innerHTML.
+    messageDisplay.innerHTML = message;
     // Clear any previous styling classes
     messageDisplay.className = '';
     // Add new styling based on message type (you'd define these in CSS)
@@ -56,7 +62,7 @@ function displayMessage(message, type = 'info') {
       messageDisplay.classList.remove('fade-in');
       messageDisplay.classList.add('fade-out'); // Example for a fade-out animation
       setTimeout(() => {
-        messageDisplay.textContent = '';
+        messageDisplay.innerHTML = ''; // Clear content using innerHTML
         messageDisplay.className = ''; // Reset all classes
       }, 500); // Allow fade-out animation to complete
     }, 3000); // Message visible for 3 seconds
@@ -84,14 +90,14 @@ function addQuote() {
     newQuoteText.value = '';
     newQuoteCategory.value = '';
 
-    // Display success message
-    displayMessage("Quote added successfully!", "success");
+    // Display success message - here, we pass plain text, displayMessage will handle innerHTML
+    displayMessage("Quote added successfully! 🎉", "success");
 
     // Display a new random quote, potentially including the newly added one
     showRandomQuote();
   } else {
-    // Provide user feedback if input is invalid
-    displayMessage("Please enter both quote text and category.", "error");
+    // Provide user feedback if input is invalid - using simple HTML for the message
+    displayMessage("<strong>Error:</strong> Please enter both quote text and category.", "error");
   }
 }
 
@@ -99,12 +105,9 @@ function addQuote() {
 newQuoteButton.addEventListener('click', showRandomQuote);
 
 // Event listener for the "Add Quote" button (assuming you have one)
-// If you don't have a separate button for adding, this would be triggered by a form submit.
-// For now, let's assume an 'addQuoteButton' exists.
 if (addQuoteButton) {
   addQuoteButton.addEventListener('click', addQuote);
 }
-
 
 // Initial call to display a quote when the page loads
 window.onload = showRandomQuote;
