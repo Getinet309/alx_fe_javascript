@@ -1,214 +1,128 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dynamic Quote Generator</title>
-    <!-- Tailwind CSS CDN for styling -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Inter Font -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-    <style>
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f3f4f6; /* Light gray background */
-        }
-        /* Custom message box styling (similar to previous version, for better UX than alert) */
-        .message-box-container {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: rgba(0, 0, 0, 0.5);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-        }
-        .message-box-content {
-            background-color: white;
-            padding: 2rem;
-            border-radius: 0.75rem; /* rounded-xl */
-            box-shadow: 0 10px 15px rgba(0, 0, 0, 0.1); /* shadow-xl */
-            text-align: center;
-            max-width: 90%;
-            width: 400px;
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dynamic Quote Generator</title>
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    /* Custom styles for the quote display */
+    #quoteDisplay {
+      min-height: 80px; /* Ensure space even if no quote is displayed */
+    }
+  </style>
 </head>
-<body class="flex flex-col items-center justify-center min-h-screen p-4">
+<body class="bg-gray-100 flex flex-col items-center justify-center min-h-screen p-4 font-sans">
+  <div class="bg-white p-8 rounded-lg shadow-xl max-w-2xl w-full text-center">
+    <h1 class="text-4xl font-bold text-gray-800 mb-6 tracking-tight">Dynamic Quote Generator</h1>
 
-    <!-- Main Application Container -->
-    <div class="bg-white p-8 rounded-xl shadow-xl max-w-md w-full mb-6">
-        <h1 class="text-3xl font-bold text-gray-800 mb-6 text-center">Dynamic Quote Generator</h1>
+    <!-- Quote Display Area -->
+    <div id="quoteDisplay" class="bg-blue-50 p-6 rounded-lg mb-8 text-lg italic text-gray-700 leading-relaxed border-l-4 border-blue-500 shadow-inner">
+      <p id="quoteText" class="mb-2"></p>
+      <p id="quoteCategory" class="text-sm text-blue-600 font-semibold"></p>
+    </div>
 
-        <!-- Quote Display Section -->
-        <div id="quoteDisplay" class="bg-blue-50 p-6 rounded-lg mb-6 shadow-inner text-center">
-            <p id="quoteText" class="text-xl font-medium text-gray-700 mb-2">
-                <!-- Initial quote text will be set by JavaScript -->
-            </p>
-            <p id="quoteAuthor" class="text-lg text-gray-600 italic">
-                <!-- Initial quote author will be set by JavaScript -->
-            </p>
-            <p id="quoteCategory" class="text-sm text-blue-500 font-semibold mt-2">
-                <!-- Quote category will be set by JavaScript -->
-            </p>
-        </div>
+    <!-- Show New Quote Button -->
+    <button id="newQuote" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-3 px-6 rounded-lg transition duration-300 ease-in-out transform hover:scale-105 shadow-md">
+      Show New Quote
+    </button>
 
-        <!-- Show New Quote Button -->
-        <button id="newQuote" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-lg transition duration-300 ease-in-out transform hover:scale-105 shadow-md">
-            Show New Quote
+    <hr class="my-10 border-gray-300">
+
+    <!-- Add New Quote Form -->
+    <div class="mt-8 text-left">
+      <h2 class="text-2xl font-semibold text-gray-800 mb-4">Add a New Quote</h2>
+      <div class="space-y-4">
+        <input id="newQuoteText" type="text" placeholder="Enter a new quote" class="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
+        <input id="newQuoteCategory" type="text" placeholder="Enter quote category" class="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500" />
+        <button onclick="addQuote()" class="bg-green-600 hover:bg-green-700 text-white font-bold py-3 px-6 rounded-lg transition duration-300 ease-in-out transform hover:scale-105 shadow-md w-full">
+          Add Quote
         </button>
+      </div>
     </div>
+  </div>
 
-    <!-- Add New Quote Section -->
-    <div class="bg-white p-8 rounded-xl shadow-xl max-w-md w-full">
-        <h2 class="text-2xl font-bold text-gray-800 mb-4 text-center">Add a New Quote</h2>
-        <div class="mb-4">
-            <label for="newQuoteText" class="block text-gray-700 text-sm font-semibold mb-2">Quote Text:</label>
-            <textarea id="newQuoteText" rows="3" placeholder="Enter a new quote" class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-y"></textarea>
-        </div>
-        <div class="mb-4">
-            <label for="newQuoteAuthor" class="block text-gray-700 text-sm font-semibold mb-2">Author (Optional):</label>
-            <input id="newQuoteAuthor" type="text" placeholder="Enter author's name" class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
-        </div>
-        <div class="mb-6">
-            <label for="newQuoteCategory" class="block text-gray-700 text-sm font-semibold mb-2">Category:</label>
-            <input id="newQuoteCategory" type="text" placeholder="Enter quote category" class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
-        </div>
-        <button id="addQuoteBtn" class="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-4 rounded-lg transition duration-300 ease-in-out transform hover:scale-105 shadow-md">
-            Add Quote
-        </button>
-    </div>
+  <script>
+    // Array to store quote objects
+    let quotes = [
+      { text: "The only way to do great work is to love what you do.", category: "Inspiration" },
+      { text: "Strive not to be a success, but rather to be of value.", category: "Motivation" },
+      { text: "The mind is everything. What you think you become.", category: "Philosophy" },
+      { text: "Innovation distinguishes between a leader and a follower.", category: "Business" },
+      { text: "The future belongs to those who believe in the beauty of their dreams.", category: "Dreams" }
+    ];
 
-    <!-- Custom Message Box Container -->
-    <div id="messageBoxContainer" class="message-box-container hidden">
-        <div class="message-box-content">
-            <p id="messageBoxText" class="text-lg font-semibold text-gray-800 mb-4"></p>
-            <button id="messageBoxCloseBtn" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg transition duration-300 ease-in-out">
-                OK
-            </button>
-        </div>
-    </div>
+    // Get DOM elements
+    const quoteDisplay = document.getElementById('quoteDisplay');
+    const quoteTextElement = document.getElementById('quoteText');
+    const quoteCategoryElement = document.getElementById('quoteCategory');
+    const newQuoteButton = document.getElementById('newQuote');
+    const newQuoteText = document.getElementById('newQuoteText');
+    const newQuoteCategory = document.getElementById('newQuoteCategory');
 
-    <script>
-        // Array to store quote objects. Each quote has text, author (optional), and category.
-        let quotes = [
-            { text: "The only way to do great work is to love what you do.", author: "Steve Jobs", category: "Inspiration" },
-            { text: "Believe you can and you're halfway there.", author: "Theodore Roosevelt", category: "Motivation" },
-            { text: "The future belongs to those who believe in the beauty of their dreams.", author: "Eleanor Roosevelt", category: "Dreams" },
-            { text: "It is during our darkest moments that we must focus to see the light.", author: "Aristotle", category: "Philosophy" },
-            { text: "Strive not to be a success, but rather to be of value.", author: "Albert Einstein", category: "Life" },
-            { text: "The unexamined life is not worth living.", author: "Socrates", category: "Philosophy" },
-            { text: "The greatest glory in living lies not in never falling, but in rising every time we fall.", author: "Nelson Mandela", category: "Inspiration" }
-        ];
+    /**
+     * @function showRandomQuote
+     * @description Displays a random quote from the 'quotes' array on the page.
+     * If the quotes array is empty, it displays a message.
+     */
+    function showRandomQuote() {
+      if (quotes.length === 0) {
+        quoteTextElement.textContent = "No quotes available. Add some!";
+        quoteCategoryElement.textContent = "";
+        return;
+      }
+      // Generate a random index
+      const randomIndex = Math.floor(Math.random() * quotes.length);
+      // Get the random quote object
+      const randomQuote = quotes[randomIndex];
 
-        // Get DOM elements
-        const quoteText = document.getElementById('quoteText');
-        const quoteAuthor = document.getElementById('quoteAuthor');
-        const quoteCategory = document.getElementById('quoteCategory');
-        const newQuoteBtn = document.getElementById('newQuote'); // Corresponds to the "Show New Quote" button
-        const newQuoteTextInput = document.getElementById('newQuoteText');
-        const newQuoteAuthorInput = document.getElementById('newQuoteAuthor');
-        const newQuoteCategoryInput = document.getElementById('newQuoteCategory');
-        const addQuoteButton = document.getElementById('addQuoteBtn'); // Corresponds to the "Add Quote" button
-        const messageBoxContainer = document.getElementById('messageBoxContainer');
-        const messageBoxText = document.getElementById('messageBoxText');
-        const messageBoxCloseBtn = document.getElementById('messageBoxCloseBtn');
+      // Update the DOM elements with the quote text and category
+      quoteTextElement.textContent = `"${randomQuote.text}"`;
+      quoteCategoryElement.textContent = `- ${randomQuote.category}`;
+    }
 
-        /**
-         * Displays a custom message box instead of alert().
-         * @param {string} message - The message to display.
-         */
-        function showMessageBox(message) {
-            messageBoxText.textContent = message;
-            messageBoxContainer.classList.remove('hidden');
-        }
+    /**
+     * @function addQuote
+     * @description Adds a new quote to the 'quotes' array based on user input from the form.
+     * It also clears the input fields and displays a new random quote.
+     */
+    function addQuote() {
+      // Get values from input fields, trim whitespace
+      const text = newQuoteText.value.trim();
+      const category = newQuoteCategory.value.trim();
 
-        /**
-         * Hides the custom message box.
-         */
-        function hideMessageBox() {
-            messageBoxContainer.classList.add('hidden');
-        }
+      // Validate input: ensure both fields are not empty
+      if (text && category) {
+        // Create a new quote object
+        const newQuote = { text, category };
+        // Add the new quote to the quotes array
+        quotes.push(newQuote);
 
-        // Event listener for message box close button
-        messageBoxCloseBtn.addEventListener('click', hideMessageBox);
+        // Clear the input fields
+        newQuoteText.value = '';
+        newQuoteCategory.value = '';
 
-        /**
-         * showRandomQuote()
-         * Displays a random quote from the 'quotes' array in the 'quoteDisplay' section.
-         * Handles cases where no quotes are available.
-         */
-        function showRandomQuote() {
-            if (quotes.length === 0) {
-                quoteText.textContent = "No quotes available. Add some!";
-                quoteAuthor.textContent = "";
-                quoteCategory.textContent = "";
-                return;
-            }
+        // Display a new random quote, potentially including the newly added one
+        showRandomQuote();
+      } else {
+        // Provide user feedback if input is invalid (e.g., using a simple alert or a modal)
+        // For this example, we'll use a basic console log. In a real app, use a user-friendly modal.
+        console.warn("Please enter both quote text and category.");
+        // Example of a simple temporary message in the UI:
+        const tempMessage = document.createElement('p');
+        tempMessage.textContent = 'Please fill in both fields!';
+        tempMessage.className = 'text-red-500 text-sm mt-2';
+        quoteDisplay.appendChild(tempMessage);
+        setTimeout(() => tempMessage.remove(), 3000); // Remove message after 3 seconds
+      }
+    }
 
-            // Generate a random index to pick a quote
-            const randomIndex = Math.floor(Math.random() * quotes.length);
-            const randomQuote = quotes[randomIndex];
+    // Event listener for the "Show New Quote" button
+    newQuoteButton.addEventListener('click', showRandomQuote);
 
-            // Update the DOM elements with the selected quote's text, author, and category
-            quoteText.textContent = `"${randomQuote.text}"`;
-            // Display author if available, otherwise hide the author element
-            quoteAuthor.textContent = randomQuote.author ? `- ${randomQuote.author}` : '';
-            // Display category if available, otherwise hide the category element
-            quoteCategory.textContent = randomQuote.category ? `Category: ${randomQuote.category}` : '';
-        }
-
-        /**
-         * addQuote()
-         * Adds a new quote to the 'quotes' array based on user input from the form.
-         * Validates input, adds the quote, clears the form, and displays a success message.
-         */
-        function addQuote() {
-            const text = newQuoteTextInput.value.trim();
-            const author = newQuoteAuthorInput.value.trim(); // Author is optional
-            const category = newQuoteCategoryInput.value.trim();
-
-            // Validate that at least text and category are provided
-            if (text && category) {
-                // Create a new quote object
-                const newQuote = {
-                    text: text,
-                    author: author, // Can be empty string if not provided
-                    category: category
-                };
-
-                // Add the new quote to the quotes array
-                quotes.push(newQuote);
-
-                // Clear the input fields
-                newQuoteTextInput.value = '';
-                newQuoteAuthorInput.value = '';
-                newQuoteCategoryInput.value = '';
-
-                // Show a success message
-                showMessageBox("Quote added successfully!");
-
-                // Display a new random quote, potentially including the newly added one
-                showRandomQuote();
-            } else {
-                // Show an error message if validation fails
-                showMessageBox("Please enter both quote text and category. Author is optional.");
-            }
-        }
-
-        // Event Listeners:
-        // 1. Listen for clicks on the "Show New Quote" button
-        newQuoteBtn.addEventListener('click', showRandomQuote);
-
-        // 2. Listen for clicks on the "Add Quote" button
-        addQuoteButton.addEventListener('click', addQuote);
-
-        // Initial display when the page loads
-        // Ensures a quote is displayed as soon as the DOM is ready
-        document.addEventListener('DOMContentLoaded', showRandomQuote);
-    </script>
+    // Initial call to display a quote when the page loads
+    window.onload = showRandomQuote;
+  </script>
 </body>
 </html>
