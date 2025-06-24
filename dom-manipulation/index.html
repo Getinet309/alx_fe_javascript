@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dynamic Quote Generator</title>
-    <!-- Tailwind CSS CDN -->
+    <!-- Tailwind CSS CDN for styling -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Inter Font -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
@@ -13,6 +13,7 @@
             font-family: 'Inter', sans-serif;
             background-color: #f3f4f6; /* Light gray background */
         }
+        /* Custom message box styling (similar to previous version, for better UX than alert) */
         .message-box-container {
             position: fixed;
             top: 0;
@@ -38,56 +39,47 @@
 </head>
 <body class="flex flex-col items-center justify-center min-h-screen p-4">
 
-    <!-- Main Container -->
+    <!-- Main Application Container -->
     <div class="bg-white p-8 rounded-xl shadow-xl max-w-md w-full mb-6">
         <h1 class="text-3xl font-bold text-gray-800 mb-6 text-center">Dynamic Quote Generator</h1>
 
         <!-- Quote Display Section -->
         <div id="quoteDisplay" class="bg-blue-50 p-6 rounded-lg mb-6 shadow-inner text-center">
             <p id="quoteText" class="text-xl font-medium text-gray-700 mb-2">
-                "The only way to do great work is to love what you do."
+                <!-- Initial quote text will be set by JavaScript -->
             </p>
             <p id="quoteAuthor" class="text-lg text-gray-600 italic">
-                - Steve Jobs
+                <!-- Initial quote author will be set by JavaScript -->
+            </p>
+            <p id="quoteCategory" class="text-sm text-blue-500 font-semibold mt-2">
+                <!-- Quote category will be set by JavaScript -->
             </p>
         </div>
 
-        <!-- Generate Quote Button -->
-        <button id="newQuoteBtn" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-lg transition duration-300 ease-in-out transform hover:scale-105 shadow-md">
-            Generate New Quote
+        <!-- Show New Quote Button -->
+        <button id="newQuote" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-4 rounded-lg transition duration-300 ease-in-out transform hover:scale-105 shadow-md">
+            Show New Quote
         </button>
     </div>
 
     <!-- Add New Quote Section -->
-    <div class="bg-white p-8 rounded-xl shadow-xl max-w-md w-full mb-6">
+    <div class="bg-white p-8 rounded-xl shadow-xl max-w-md w-full">
         <h2 class="text-2xl font-bold text-gray-800 mb-4 text-center">Add a New Quote</h2>
         <div class="mb-4">
-            <label for="newQuoteText" class="block text-gray-700 text-sm font-semibold mb-2">Quote:</label>
-            <textarea id="newQuoteText" rows="3" class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-y"></textarea>
+            <label for="newQuoteText" class="block text-gray-700 text-sm font-semibold mb-2">Quote Text:</label>
+            <textarea id="newQuoteText" rows="3" placeholder="Enter a new quote" class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-y"></textarea>
+        </div>
+        <div class="mb-4">
+            <label for="newQuoteAuthor" class="block text-gray-700 text-sm font-semibold mb-2">Author (Optional):</label>
+            <input id="newQuoteAuthor" type="text" placeholder="Enter author's name" class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
         </div>
         <div class="mb-6">
-            <label for="newQuoteAuthor" class="block text-gray-700 text-sm font-semibold mb-2">Author:</label>
-            <input type="text" id="newQuoteAuthor" class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500">
+            <label for="newQuoteCategory" class="block text-gray-700 text-sm font-semibold mb-2">Category:</label>
+            <input id="newQuoteCategory" type="text" placeholder="Enter quote category" class="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500" />
         </div>
         <button id="addQuoteBtn" class="w-full bg-green-600 hover:bg-green-700 text-white font-semibold py-3 px-4 rounded-lg transition duration-300 ease-in-out transform hover:scale-105 shadow-md">
             Add Quote
         </button>
-    </div>
-
-    <!-- Import/Export Section -->
-    <div class="bg-white p-8 rounded-xl shadow-xl max-w-md w-full">
-        <h2 class="text-2xl font-bold text-gray-800 mb-4 text-center">Data Management</h2>
-
-        <!-- JSON Export Button -->
-        <button id="exportQuotesBtn" class="w-full bg-purple-600 hover:bg-purple-700 text-white font-semibold py-3 px-4 rounded-lg mb-4 transition duration-300 ease-in-out transform hover:scale-105 shadow-md">
-            Export Quotes to JSON
-        </button>
-
-        <!-- JSON Import File Input -->
-        <div class="mb-4">
-            <label for="importFile" class="block text-gray-700 text-sm font-semibold mb-2">Import Quotes from JSON File:</label>
-            <input type="file" id="importFile" accept=".json" class="w-full text-gray-700 bg-gray-100 p-3 rounded-lg border border-gray-300 cursor-pointer file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" />
-        </div>
     </div>
 
     <!-- Custom Message Box Container -->
@@ -101,27 +93,26 @@
     </div>
 
     <script>
-        // Array to store quotes
-        let quotes = [];
-
-        // Default quotes if local storage is empty
-        const defaultQuotes = [
-            { text: "The only way to do great work is to love what you do.", author: "Steve Jobs" },
-            { text: "Believe you can and you're halfway there.", author: "Theodore Roosevelt" },
-            { text: "The future belongs to those who believe in the beauty of their dreams.", author: "Eleanor Roosevelt" },
-            { text: "It is during our darkest moments that we must focus to see the light.", author: "Aristotle" },
-            { text: "Strive not to be a success, but rather to be of value.", author: "Albert Einstein" }
+        // Array to store quote objects. Each quote has text, author (optional), and category.
+        let quotes = [
+            { text: "The only way to do great work is to love what you do.", author: "Steve Jobs", category: "Inspiration" },
+            { text: "Believe you can and you're halfway there.", author: "Theodore Roosevelt", category: "Motivation" },
+            { text: "The future belongs to those who believe in the beauty of their dreams.", author: "Eleanor Roosevelt", category: "Dreams" },
+            { text: "It is during our darkest moments that we must focus to see the light.", author: "Aristotle", category: "Philosophy" },
+            { text: "Strive not to be a success, but rather to be of value.", author: "Albert Einstein", category: "Life" },
+            { text: "The unexamined life is not worth living.", author: "Socrates", category: "Philosophy" },
+            { text: "The greatest glory in living lies not in never falling, but in rising every time we fall.", author: "Nelson Mandela", category: "Inspiration" }
         ];
 
-        // DOM Elements
+        // Get DOM elements
         const quoteText = document.getElementById('quoteText');
         const quoteAuthor = document.getElementById('quoteAuthor');
-        const newQuoteBtn = document.getElementById('newQuoteBtn');
-        const newQuoteText = document.getElementById('newQuoteText');
-        const newQuoteAuthor = document.getElementById('newQuoteAuthor');
-        const addQuoteBtn = document.getElementById('addQuoteBtn');
-        const exportQuotesBtn = document.getElementById('exportQuotesBtn');
-        const importFile = document.getElementById('importFile');
+        const quoteCategory = document.getElementById('quoteCategory');
+        const newQuoteBtn = document.getElementById('newQuote'); // Corresponds to the "Show New Quote" button
+        const newQuoteTextInput = document.getElementById('newQuoteText');
+        const newQuoteAuthorInput = document.getElementById('newQuoteAuthor');
+        const newQuoteCategoryInput = document.getElementById('newQuoteCategory');
+        const addQuoteButton = document.getElementById('addQuoteBtn'); // Corresponds to the "Add Quote" button
         const messageBoxContainer = document.getElementById('messageBoxContainer');
         const messageBoxText = document.getElementById('messageBoxText');
         const messageBoxCloseBtn = document.getElementById('messageBoxCloseBtn');
@@ -146,194 +137,78 @@
         messageBoxCloseBtn.addEventListener('click', hideMessageBox);
 
         /**
-         * Saves the current quotes array to local storage.
+         * showRandomQuote()
+         * Displays a random quote from the 'quotes' array in the 'quoteDisplay' section.
+         * Handles cases where no quotes are available.
          */
-        function saveQuotes() {
-            try {
-                localStorage.setItem('quotes', JSON.stringify(quotes));
-            } catch (error) {
-                console.error("Error saving quotes to local storage:", error);
-                showMessageBox("Failed to save quotes. Local storage might be full or unavailable.");
-            }
-        }
-
-        /**
-         * Loads quotes from local storage. If no quotes are found, initializes with default quotes.
-         */
-        function loadQuotes() {
-            try {
-                const storedQuotes = localStorage.getItem('quotes');
-                if (storedQuotes) {
-                    quotes = JSON.parse(storedQuotes);
-                } else {
-                    quotes = [...defaultQuotes]; // Use default quotes if none are stored
-                    saveQuotes(); // Save default quotes for future sessions
-                }
-            } catch (error) {
-                console.error("Error loading quotes from local storage:", error);
-                showMessageBox("Failed to load quotes. Data might be corrupted or local storage unavailable. Using default quotes.");
-                quotes = [...defaultQuotes]; // Fallback to default quotes
-            }
-        }
-
-        /**
-         * Displays a random quote from the quotes array.
-         * Also stores the index of the last viewed quote in session storage.
-         */
-        function displayRandomQuote() {
+        function showRandomQuote() {
             if (quotes.length === 0) {
                 quoteText.textContent = "No quotes available. Add some!";
                 quoteAuthor.textContent = "";
+                quoteCategory.textContent = "";
                 return;
             }
+
+            // Generate a random index to pick a quote
             const randomIndex = Math.floor(Math.random() * quotes.length);
             const randomQuote = quotes[randomIndex];
-            quoteText.textContent = `"${randomQuote.text}"`;
-            quoteAuthor.textContent = `- ${randomQuote.author}`;
 
-            // Store last viewed quote index in session storage
-            try {
-                sessionStorage.setItem('lastViewedQuoteIndex', randomIndex.toString());
-            } catch (error) {
-                console.error("Error saving last viewed quote to session storage:", error);
-            }
+            // Update the DOM elements with the selected quote's text, author, and category
+            quoteText.textContent = `"${randomQuote.text}"`;
+            // Display author if available, otherwise hide the author element
+            quoteAuthor.textContent = randomQuote.author ? `- ${randomQuote.author}` : '';
+            // Display category if available, otherwise hide the category element
+            quoteCategory.textContent = randomQuote.category ? `Category: ${randomQuote.category}` : '';
         }
 
         /**
-         * Adds a new quote from the input fields to the quotes array and saves it.
+         * addQuote()
+         * Adds a new quote to the 'quotes' array based on user input from the form.
+         * Validates input, adds the quote, clears the form, and displays a success message.
          */
         function addQuote() {
-            const text = newQuoteText.value.trim();
-            const author = newQuoteAuthor.value.trim();
+            const text = newQuoteTextInput.value.trim();
+            const author = newQuoteAuthorInput.value.trim(); // Author is optional
+            const category = newQuoteCategoryInput.value.trim();
 
-            if (text && author) {
-                quotes.push({ text, author });
-                saveQuotes();
-                newQuoteText.value = '';
-                newQuoteAuthor.value = '';
+            // Validate that at least text and category are provided
+            if (text && category) {
+                // Create a new quote object
+                const newQuote = {
+                    text: text,
+                    author: author, // Can be empty string if not provided
+                    category: category
+                };
+
+                // Add the new quote to the quotes array
+                quotes.push(newQuote);
+
+                // Clear the input fields
+                newQuoteTextInput.value = '';
+                newQuoteAuthorInput.value = '';
+                newQuoteCategoryInput.value = '';
+
+                // Show a success message
                 showMessageBox("Quote added successfully!");
-                displayRandomQuote(); // Display a new quote after adding
+
+                // Display a new random quote, potentially including the newly added one
+                showRandomQuote();
             } else {
-                showMessageBox("Please enter both quote text and author.");
+                // Show an error message if validation fails
+                showMessageBox("Please enter both quote text and category. Author is optional.");
             }
         }
 
-        /**
-         * Exports the current quotes array to a JSON file.
-         */
-        function exportQuotes() {
-            if (quotes.length === 0) {
-                showMessageBox("No quotes to export!");
-                return;
-            }
-            try {
-                const dataStr = JSON.stringify(quotes, null, 2); // Pretty print JSON
-                const blob = new Blob([dataStr], { type: 'application/json' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = 'quotes.json';
-                document.body.appendChild(a); // Append to body to make it clickable
-                a.click();
-                document.body.removeChild(a); // Clean up
-                URL.revokeObjectURL(url); // Release the URL object
-                showMessageBox("Quotes exported successfully as quotes.json!");
-            } catch (error) {
-                console.error("Error exporting quotes:", error);
-                showMessageBox("Failed to export quotes.");
-            }
-        }
+        // Event Listeners:
+        // 1. Listen for clicks on the "Show New Quote" button
+        newQuoteBtn.addEventListener('click', showRandomQuote);
 
-        /**
-         * Imports quotes from a selected JSON file.
-         * @param {Event} event - The file input change event.
-         */
-        function importFromJsonFile(event) {
-            const file = event.target.files[0];
-            if (!file) {
-                showMessageBox("No file selected.");
-                return;
-            }
-            if (file.type !== 'application/json') {
-                showMessageBox("Please select a JSON file.");
-                return;
-            }
+        // 2. Listen for clicks on the "Add Quote" button
+        addQuoteButton.addEventListener('click', addQuote);
 
-            const fileReader = new FileReader();
-            fileReader.onload = function(e) {
-                try {
-                    const importedData = JSON.parse(e.target.result);
-
-                    // Validate imported data structure
-                    if (!Array.isArray(importedData)) {
-                        showMessageBox("Invalid JSON format. Expected an array of quotes.");
-                        return;
-                    }
-                    const validQuotes = importedData.filter(q => q.text && q.author);
-                    if (validQuotes.length === 0 && importedData.length > 0) {
-                        showMessageBox("No valid quotes found in the imported file. Each quote must have 'text' and 'author'.");
-                        return;
-                    }
-
-                    // Append new quotes, avoiding duplicates if desired (optional logic)
-                    const existingQuoteTexts = new Set(quotes.map(q => q.text));
-                    const newQuotesToAdd = validQuotes.filter(q => !existingQuoteTexts.has(q.text));
-
-                    if (newQuotesToAdd.length > 0) {
-                        quotes.push(...newQuotesToAdd);
-                        saveQuotes();
-                        displayRandomQuote(); // Update display with new quotes
-                        showMessageBox(`Successfully imported ${newQuotesToAdd.length} new quotes!`);
-                    } else if (importedData.length > 0) {
-                        showMessageBox("All quotes in the imported file already exist.");
-                    } else {
-                         showMessageBox("The imported file is empty or contains no valid quotes.");
-                    }
-
-                } catch (error) {
-                    console.error("Error parsing or importing JSON:", error);
-                    showMessageBox("Error importing quotes. Please ensure the file is a valid JSON.");
-                } finally {
-                    // Clear the file input for re-selection
-                    event.target.value = '';
-                }
-            };
-            fileReader.onerror = function() {
-                showMessageBox("Error reading file.");
-            };
-            fileReader.readAsText(file);
-        }
-
-        // Event Listeners
-        newQuoteBtn.addEventListener('click', displayRandomQuote);
-        addQuoteBtn.addEventListener('click', addQuote);
-        exportQuotesBtn.addEventListener('click', exportQuotes);
-        importFile.addEventListener('change', importFromJsonFile);
-
-        // Initial setup on page load
-        document.addEventListener('DOMContentLoaded', () => {
-            loadQuotes(); // Load quotes from local storage first
-            
-            // Try to display the last viewed quote from session storage
-            try {
-                const lastViewedIndex = sessionStorage.getItem('lastViewedQuoteIndex');
-                if (lastViewedIndex !== null && quotes.length > 0) {
-                    const index = parseInt(lastViewedIndex, 10);
-                    if (index >= 0 && index < quotes.length) {
-                        const lastQuote = quotes[index];
-                        quoteText.textContent = `"${lastQuote.text}"`;
-                        quoteAuthor.textContent = `- ${lastQuote.author}`;
-                    } else {
-                        displayRandomQuote(); // Fallback if index is invalid
-                    }
-                } else {
-                    displayRandomQuote(); // Display a random quote if no session data or no quotes
-                }
-            } catch (error) {
-                console.error("Error retrieving last viewed quote from session storage:", error);
-                displayRandomQuote(); // Fallback in case of session storage error
-            }
-        });
+        // Initial display when the page loads
+        // Ensures a quote is displayed as soon as the DOM is ready
+        document.addEventListener('DOMContentLoaded', showRandomQuote);
     </script>
 </body>
 </html>
