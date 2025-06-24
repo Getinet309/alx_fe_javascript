@@ -1,4 +1,4 @@
-   // Array to store quote objects (master list)
+  // Array to store quote objects (master list)
         let quotes = [];
         // Variable to store the currently active filter category
         let currentFilterCategory = 'all';
