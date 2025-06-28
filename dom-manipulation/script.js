@@ -17,6 +17,8 @@ const messageDisplay = document.getElementById('messageDisplay');
 const formContainer = document.getElementById('formContainer');
 const categoryFilter = document.getElementById('categoryFilter');
 const syncButton = document.getElementById('syncButton'); // Get the sync button
+const importFileInput = document.getElementById('importFile'); // Assuming an input type="file" with id="importFile"
+
 
 // Variables for dynamically created elements (will be assigned in createAddQuoteForm)
 let newQuoteText;
@@ -407,7 +409,11 @@ function loadFilterPreference() {
  */
 async function fetchQuotesFromServer() {
     try {
-        const response = await fetch('https://jsonplaceholder.typicode.com/posts');
+        const response = await fetch('https://jsonplaceholder.typicode.com/posts', {
+            headers: {
+                'Accept': 'application/json', // Inform the server we prefer JSON
+            }
+        });
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
@@ -448,7 +454,8 @@ async function pushNewLocalQuotesToServer(newLocalQuotes) {
                     userId: 1, // Dummy userId for JSONPlaceholder
                 }),
                 headers: {
-                    'Content-type': 'application/json; charset=UTF-8',
+                    'Content-Type': 'application/json; charset=UTF-8', // Crucial: Inform server we're sending JSON
+                    'Accept': 'application/json', // Inform the server we prefer JSON in return
                 },
             });
             if (!response.ok) {
@@ -563,7 +570,6 @@ syncButton.addEventListener('click', syncWithServer);
 categoryFilter.addEventListener('change', () => filterQuotes(true)); // Ensure save is true for filter changes
 
 // Event listener for importing quotes (assuming you have an input type="file" with id="importFile")
-const importFileInput = document.getElementById('importFile');
 if (importFileInput) {
     importFileInput.addEventListener('change', importFromJsonFile);
 }
@@ -594,8 +600,7 @@ window.onload = () => {
                     showRandomQuote(); // If session quote is no longer valid, show a new random one
                 }
             } else {
-                // If session quote doesn't match filter, show a random filtered one
-                showRandomQuote();
+                showRandomQuote(); // If session quote doesn't match filter, show a random filtered one
             }
         } else {
             showRandomQuote(); // If no last viewed, or no quotes in filter, show a random filtered one
