@@ -474,10 +474,11 @@ async function pushNewLocalQuotesToServer(newLocalQuotes) {
 }
 
 /**
- * @function syncWithServer
+ * @function syncQuotes
  * @description Syncs local quotes with server data, resolving conflicts with server precedence.
+ * This function now represents the main synchronization logic.
  */
-async function syncWithServer() {
+async function syncQuotes() {
     displayMessage("Syncing with server...", "info");
     try {
         const serverData = await fetchQuotesFromServer();
@@ -563,8 +564,8 @@ newQuoteButton.addEventListener('click', showRandomQuote);
 // Event listener for the "Export Quotes" button
 exportQuotesButton.addEventListener('click', exportQuotes);
 
-// Event listener for the "Sync with Server" button
-syncButton.addEventListener('click', syncWithServer);
+// Event listener for the "Sync with Server" button (now calls syncQuotes)
+syncButton.addEventListener('click', syncQuotes);
 
 // Event listener for category filter change
 categoryFilter.addEventListener('change', () => filterQuotes(true)); // Ensure save is true for filter changes
@@ -612,5 +613,5 @@ window.onload = () => {
     }
     // Optional: Start periodic sync after initial load (e.g., every 30 seconds)
     // Uncomment the line below to enable automatic syncing
-    // setInterval(syncWithServer, 30000);
+    // setInterval(syncQuotes, 30000);
 };
