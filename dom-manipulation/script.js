@@ -548,6 +548,7 @@ async function syncQuotes() {
         }
         displayMessage(message, "success");
         console.log('Local quotes after sync:', quotes);
+        alert("Quotes synced with server!"); // Added alert here
 
     } catch (error) {
         console.error('Sync failed:', error);
